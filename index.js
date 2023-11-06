@@ -14,7 +14,7 @@ app.use(express.json());
 
 
 //password: h8Jk5lP0J1WgYdCi
-const  uri = "mongodb://redwantamim525:h8Jk5lP0J1WgYdCi@ac-7qfszrw-shard-00-00.hheptki.mongodb.net:27017,ac-7qfszrw-shard-00-01.hheptki.mongodb.net:27017,ac-7qfszrw-shard-00-02.hheptki.mongodb.net:27017/?ssl=true&replicaSet=atlas-13fbk7-shard-0&authSource=admin&retryWrites=true&w=majority";
+const uri = "mongodb+srv://redwantamim525:h8Jk5lP0J1WgYdCi@cluster0.jkkcmls.mongodb.net/?retryWrites=true&w=majority";
 
 
 
@@ -33,75 +33,58 @@ async function run() {
     await client.connect();
 
     ///create a collection of documents
-    const booksCollection = client.db('booksdb').collection('bookss');
+    const booksCollection = client.db('booksInventory').collection('books');
 
+////insert a book post 
+ app.post('/upload-book',async(req,res)=>{
+
+  const data=req.body;
+  const result=await booksCollection.insertOne(data);
+  console.log(result)
+  res.send(result);
+ })
+
+ //find to get
+
+ app.get('/all-books',async(req,res)=>{
+
+  const books=booksCollection.find();
+
+  const result=await books.toArray();
+
+  res.send(result);
+ })
+
+
+ ///update a books
+ app.patch("/book/:id", async(req,res)=>{
+
+  const id=req.params.id;
+const updateBooksData=req.body;
+const filter ={ _id :new ObjectId(id)};
+
+
+const updateDoc = {
+  $set: updateBooksData // No need to spread the 'updateBooksData' since it's already an object
+};
+const options = { upsert: true };
+
+const result=await booksCollection.updateOne(filter,updateDoc,options);
+
+  res.send(result)
+ })
     
+//delete a book
+app.delete("/book/:id", async(req,res)=>{
 
-    const mycart=client.db('mycart').collection('cart');
+  const id=req.params.id;
 
-
-
-    app.post('/product', async(req,res)=>{
-        const newProduct = req.body;
-       console.log(newProduct);
-       const result = await productCollection.insertOne(newProduct);
-       res.send(result);
-    })
-
-    app.get("/product", async (req, res) => {
-      const cursor = productCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
-
-    app.get("/product/:id", async (req, res) => {
-      const id=req.params.id;
-     const query={
-      _id : new ObjectId(id)
-     }
-      const result = await productCollection.findOne(query) ;
-      res.send(result);
-    });
+const filter ={ _id :new ObjectId(id)};
+const result= await booksCollection.deleteOne(filter)
+res.send(result);
 
 
-
-    app.post('/cart', async(req,res)=>{
-      const newcart = req.body;
-     
-     const result = await mycart.insertOne(newcart);
-     res.send(result);
-  })
-
-  app.get("/cart", async (req, res) => {
-    const cursor = mycart.find();
-    const result = await cursor.toArray();
-    res.send(result);
-  });
-
-
-  app.put('/product/:id', async (req, res) => {
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) }
-    const options = { upsert: true };
-    const update = req.body;
-    // name, brand,rating,description, category,photo,price
-    const productupdate = {
-        $set: {
-            name: update.name,
-            brand:update.brand,
-            rating: update.rating,
-            description: update.description,
-            category: update.category,
-            price: update.price,
-            photo: update.photo
-        }
-    }
-
-    const result = await productCollection.updateOne(filter, 
-      productupdate, options);
-    res.send(result);
 })
-
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
