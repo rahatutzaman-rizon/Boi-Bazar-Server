@@ -39,18 +39,47 @@ async function run() {
  app.post('/upload-book',async(req,res)=>{
 
   const data=req.body;
+
+  //
   const result=await booksCollection.insertOne(data);
   console.log(result)
   res.send(result);
  })
 
+
+ ///MOREdetail a book
+
+ app.get("/moredetail/:id", async (req, res) => {
+  const id=req.params.id;
+ const query={
+  _id : new ObjectId(id)
+ }
+  const result = await booksCollection.findOne(query) ;
+  res.send(result);
+});
+
+
  //find to get
 
- app.get('/all-books',async(req,res)=>{
+//  app.get('/all-books',async(req,res)=>{
 
-  const books=booksCollection.find();
+//   const books=booksCollection.find();
 
-  const result=await books.toArray();
+//   const result=await books.toArray();
+
+//   res.send(result);
+//  })
+
+
+////query
+app.get('/all-books',async(req,res)=>{
+
+ let query={};
+ if(req.query?.category){
+  query={category: req.query.category}
+ }
+ const result= await booksCollection.find(query).toArray();
+
 
   res.send(result);
  })
