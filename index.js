@@ -2,6 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
+//json web token 
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
+app.use(cookieParser())
+
+
 //mongodb
  const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
  require('dotenv').config()
@@ -30,11 +36,11 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     ///create a collection of documents
     const booksCollection = client.db('booksInventory').collection('books');
-
+    const borrowCollection = client.db('booksInventory').collection('borrow');
 ////insert a book post 
  app.post('/upload-book',async(req,res)=>{
 
@@ -46,6 +52,19 @@ async function run() {
   res.send(result);
  })
 
+ ////insert a book post 
+ app.post('/borrow', async(req,res)=>{
+  const newcart = req.body;
+ 
+ const result = await borrowCollection.insertOne(newcart);
+ res.send(result);
+})
+
+app.get("/borrow", async (req, res) => {
+const cursor = borrowCollection.find();
+const result = await cursor.toArray();
+res.send(result);
+});
 
  ///MOREdetail a book
 
