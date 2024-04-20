@@ -41,16 +41,24 @@ async function run() {
     ///create a collection of documents
     const booksCollection = client.db('booksInventory').collection('books');
     const borrowCollection = client.db('booksInventory').collection('borrow');
+    const donateCollection =  client.db('booksInventory').collection('donate');
 ////insert a book post 
  app.post('/upload-book',async(req,res)=>{
 
   const data=req.body;
 
   //
-  const result=await booksCollection.insertOne(data);
+  const result=await donateCollection.insertOne(data);
   console.log(result)
   res.send(result);
  })
+
+ //donation
+ app.get("/donate", async (req, res) => {
+  const cursor =donateCollection.find();
+  const result = await cursor.toArray();
+  res.send(result);
+  });
 
  ////insert a book post 
  app.post('/borrow', async(req,res)=>{
@@ -78,16 +86,6 @@ res.send(result);
 });
 
 
- //find to get
-
-//  app.get('/all-books',async(req,res)=>{
-
-//   const books=booksCollection.find();
-
-//   const result=await books.toArray();
-
-//   res.send(result);
-//  })
 
 
 ////query
@@ -103,24 +101,45 @@ app.get('/all-books',async(req,res)=>{
   res.send(result);
  })
 
+ 
+
+ 
+ 
+
 
  ///update a books
- app.patch("/book/:id", async(req,res)=>{
+// PUT route to update book quantity
+app.put("/moredetail/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { quantity } = req.body;
 
-  const id=req.params.id;
-const updateBooksData=req.body;
-const filter ={ _id :new ObjectId(id)};
+    // Find the book by ID
+    const filter = { _id: new ObjectId(id) };
+    const book = await booksCollection.findOne(filter);
 
+    // If book not found, return an error
+    if (!book) {
+      return res.status(404).json({ error: "Book not found" });
+    }
 
-const updateDoc = {
-  $set: updateBooksData // No need to spread the 'updateBooksData' since it's already an object
-};
-const options = { upsert: true };
+    // Update the quantity
+    const updateDoc = {
+      $set: {
+        quantity: quantity,
+      },
+    };
 
-const result=await booksCollection.updateOne(filter,updateDoc,options);
+    // Save the updated book
+    const result = await booksCollection.updateOne(filter, updateDoc);
 
-  res.send(result)
- })
+    // Return a success message
+    res.json({ message: "Book quantity updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
     
 //delete a book
 app.delete("/book/:id", async(req,res)=>{
